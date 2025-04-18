@@ -116,6 +116,42 @@ class ZohoService:
             logger.error(f"Error in Zoho API request: {str(e)}")
             raise
     
+    async def get_leads(self, fields: Optional[List[str]] = None, criteria: Optional[str] = None, 
+                        page: int = 1, per_page: int = 200) -> List[Dict[str, Any]]:
+        """
+        Get leads from Zoho CRM.
+        
+        Args:
+            fields: List of field names to fetch (None for all fields)
+            criteria: Search criteria
+            page: Page number
+            per_page: Records per page
+            
+        Returns:
+            List of lead records
+        """
+        params = {
+            "page": page,
+            "per_page": per_page
+        }
+        
+        # Add fields parameter if specified
+        if fields:
+            params["fields"] = ",".join(fields)
+            
+        # Add search criteria if specified
+        if criteria:
+            params["criteria"] = criteria
+            
+        # Make the API request
+        response = await self.make_api_request(
+            method="GET",
+            endpoint="Leads",
+            params=params
+        )
+        
+        return response.get("data", [])
+    
     async def process_webhook(self, payload: WebhookPayload) -> List[Dict[str, Any]]:
         """
         Process webhook payload from Zoho CRM.

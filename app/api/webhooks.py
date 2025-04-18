@@ -78,4 +78,68 @@ async def handle_zoho_webhook(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing webhook: {str(e)}"
+        )
+
+@router.get("/leads")
+async def get_leads(
+    page: int = 1, 
+    per_page: int = 50,
+    criteria: str = None
+):
+    """
+    Get leads from Zoho CRM with specific fields.
+    
+    This endpoint fetches leads from Zoho CRM with only the specified fields.
+    """
+    try:
+        # Define the fields to fetch
+        fields = [
+            "id", 
+            "First_Name", 
+            "Last_Name", 
+            "Lead_Status",
+            "Lead_Source",
+            "Cold_lead_intro",
+            "Brand",
+            "Created_Time",
+            "Creation_date",
+            "Contact_type"
+        ]
+        
+        # Get leads from Zoho CRM
+        leads = await zoho_service.get_leads(
+            fields=fields,
+            criteria=criteria,
+            page=page,
+            per_page=per_page
+        )
+        
+        # Transform the data to match the required format
+        formatted_leads = []
+        for lead in leads:
+            formatted_lead = {
+                "lead_id": lead.get("id"),
+                "first_name": lead.get("First_Name"),
+                "last_name": lead.get("Last_Name"),
+                "lead_status": lead.get("Lead_Status"),
+                "lead_source": lead.get("Lead_Source"),
+                "cold_lead_intro": lead.get("Cold_lead_intro"),
+                "brand": lead.get("Brand"),
+                "created_time": lead.get("Created_Time"),
+                "creation_date": lead.get("Creation_date"),
+                "contact_type": lead.get("Contact_type")
+            }
+            formatted_leads.append(formatted_lead)
+        
+        return {
+            "status": "success",
+            "count": len(formatted_leads),
+            "data": formatted_leads
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching leads: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching leads: {str(e)}"
         ) 
